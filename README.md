@@ -1,5 +1,8 @@
 # MicroAPI
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/1c21e035-5a76-4754-9b40-7fadc8627ffe" />
+
+
 MicroAPI is a minimal, FastAPI-inspired web framework built from scratch to understand how modern Python API frameworks work at a fundamental level.
 
 The goal of this project is not feature parity with FastAPI, but clarity. microapi removes abstraction layers and hidden behavior so that every part of the request lifecycle can be read, understood, and modified.
