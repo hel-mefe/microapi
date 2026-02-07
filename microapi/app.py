@@ -1,56 +1,39 @@
-from microapi.router import SimpleRouter
-from microapi.core import BaseRouter
+from microapi.core.router import BaseRouter
+from microapi.router.simple import SimpleRouter
+from microapi.core.request import Request
+from microapi.request.asgi import ASGIRequest
+from microapi.response import TextResponse, JSONResponse
+from microapi.core.response import Response
+
 
 class MicroAPI:
-
     def __init__(self, router: BaseRouter | None = None):
-        """
-            @constructor params
-             - router: a concrete implementation for abstract class BaseRouter,
-             if not provided then falls back to SimpleRouter instance
-        """
         self.router = router or SimpleRouter()
 
     async def __call__(self, scope, receive, send):
-        if scope['type'] != 'http':
+        if scope["type"] != "http":
             return
 
-        method, path = scope['method'], scope['path']
-        handler = self.router.match(method, path)
+        request: Request = ASGIRequest(scope, receive)
+
+        handler = self.router.match(request.method, request.path)
 
         if handler is None:
-            await send(
-                {
-                    "type": "http.response.start",
-                    "status": 200,
-                    "headers": [
-                        (b"content-type", b"text/plain"),
-                    ],
-                }
-            )
-
-            await send(
-                {
-                    "type": "http.response.body",
-                    "body": b"Hello from MicroAPI",
-                }
-            )
+            response = TextResponse("Not Found", status_code=404)
+            await response.send(send)
             return
 
-        result = await handler()
-        await send(
-            {
-                "type": "http.response.start",
-                "status": 200,
-                "headers": [(b"content-type", b"text/plain")],
-            }
-        )
-        await send(
-            {
-                "type": "http.response.body",
-                "body": result.encode(),
-            }
-        )
+        result = await handler(request)
 
+        if isinstance(result, Response):
+            response = result
+        elif isinstance(result, dict):
+            response = JSONResponse(result)
+        elif isinstance(result, str):
+            response = TextResponse(result)
+        else:
+            response = TextResponse(str(result))
+
+        await response.send(send)
 
 app = MicroAPI()
