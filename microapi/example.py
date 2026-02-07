@@ -1,4 +1,4 @@
-from app import app
+from microapi.app import app
 
 async def ping():
     return "pong"
