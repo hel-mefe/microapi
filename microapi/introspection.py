@@ -27,6 +27,18 @@ def render_endpoints_page(router: BaseRouter) -> str:
                     font-family: monospace;
                     background: #0b0b0b;
                     color: #e5e5e5;
+                    margin: 0;
+                }}
+                header {{
+                    display: flex;
+                    align-items: center;
+                    padding: 16px 24px;
+                    border-bottom: 1px solid #222;
+                }}
+                header img {{
+                    height: 28px;
+                }}
+                main {{
                     padding: 24px;
                 }}
                 table {{
@@ -47,19 +59,24 @@ def render_endpoints_page(router: BaseRouter) -> str:
             </style>
         </head>
         <body>
-            <h1>Registered Endpoints</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Method</th>
-                        <th>Path</th>
-                        <th>Handler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows_html}
-                </tbody>
-            </table>
+            <header>
+                <img src="/assets/microapi.png" alt="MicroAPI logo" />
+            </header>
+            <main>
+                <h1>Registered Endpoints</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Path</th>
+                            <th>Handler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows_html}
+                    </tbody>
+                </table>
+            </main>
         </body>
     </html>
     """
