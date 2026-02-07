@@ -17,6 +17,7 @@ class TrieNode:
 class TrieRouter(BaseRouter):
     def __init__(self):
         self.root = TrieNode()
+        self._routes = list[tuple[str, str, Handler]] = []
 
     def add(self, method: str, path: str, handler: Handler) -> None:
         node = self.root
