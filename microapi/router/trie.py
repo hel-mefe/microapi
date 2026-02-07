@@ -46,16 +46,20 @@ class TrieRouter(BaseRouter):
         path_params: dict[str, str] = {}
 
         for segment in segments:
+            # static match
             if segment in node.static_children:
                 node = node.static_children[segment]
                 continue
             
+            # param match
             if node.param_child is not None:
                 path_params[node.param_child.param_name] = segment
                 node = node.param_child
                 continue
-            
+           
+            # no match found inside of the Trie
             return None
+
         handler = node.handlers.get(method.upper())
         
         if handler is None:
@@ -63,7 +67,7 @@ class TrieRouter(BaseRouter):
 
         # path_params will be injected later
         handler.__microapi_path_params__ = path_params
-        return handler
+        return handler, path_params
 
     def routes(self) -> Iterable[Tupe[str, str, Handler]]:
         raise NotImplementedError
