@@ -2,8 +2,9 @@ from microapi.core.router import BaseRouter
 from microapi.router.simple import SimpleRouter
 from microapi.core.request import Request
 from microapi.request.asgi import ASGIRequest
-from microapi.response import TextResponse, JSONResponse
+from microapi.response import TextRespOnse, JSONResponse
 from microapi.core.response import Response
+from microapi.core.exceptions import HTTPException
 
 
 class MicroAPI:
@@ -23,7 +24,16 @@ class MicroAPI:
             await response.send(send)
             return
 
-        result = await handler(request)
+        try:
+            result = await handler(request)
+        except HTTPException as exc:
+            response = JSONResponse(
+                {"detail": exc.detail},
+                status_code=exc.status_code,
+                headers=exc.headers,
+            )
+            await response.send(send)
+            return
 
         if isinstance(result, Response):
             response = result
