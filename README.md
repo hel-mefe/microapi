@@ -1,6 +1,6 @@
-# microapi
+# <icroapi
 
-microapi is a minimal, FastAPI-inspired web framework built from scratch to understand how modern Python API frameworks work at a fundamental level.
+MicroAPI is a minimal, FastAPI-inspired web framework built from scratch to understand how modern Python API frameworks work at a fundamental level.
 
 The goal of this project is not feature parity with FastAPI, but clarity. microapi removes abstraction layers and hidden behavior so that every part of the request lifecycle can be read, understood, and modified.
 
@@ -10,7 +10,7 @@ This repository is both a learning tool and a reference implementation.
 
 ## Project Goals
 
-microapi is designed with the following goals in mind:
+MicroAPI is designed with the following goals in mind:
 
 - Provide a clear, minimal ASGI application implementation
 - Demonstrate how routing works internally
