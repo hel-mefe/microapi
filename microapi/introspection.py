@@ -1,5 +1,5 @@
 from microapi.core.router import BaseRouter
-
+import os
 
 def render_endpoints_page(router: BaseRouter) -> str:
     rows = []
@@ -60,7 +60,7 @@ def render_endpoints_page(router: BaseRouter) -> str:
         </head>
         <body>
             <header>
-                <img src="/assets/microapi.png" alt="MicroAPI logo" />
+                <img src="assets/microapi.png" width="200px" height="64px" alt="MicroAPI logo" />
             </header>
             <main>
                 <h1>Registered Endpoints</h1>
