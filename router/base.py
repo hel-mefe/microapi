@@ -4,7 +4,7 @@ from typing import Callable, Optional
 Handler = Callable[..., object]
 
 class BaseRouter(ABC):
-    @abstractmetho
+    @abstractmethod
     def add(self, method: str, path: str, handler: Handler) -> None:
         """
         Register a new route
@@ -13,10 +13,10 @@ class BaseRouter(ABC):
         raise NotImplementedError
     
 
-        @abstractmethod
-        def match(self, method: str, path: str) -> Optional[Handler]:
-            """
-            Register a new route.
-            """
+    @abstractmethod
+    def match(self, method: str, path: str) -> Optional[Handler]:
+        """
+        Register a new route.
+        """
             
-            raise NotImplementedError
+        raise NotImplementedError

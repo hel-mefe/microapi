@@ -1,9 +1,15 @@
-from router import Router
+from router.simple import SimpleRouter
+from router.base import BaseRouter
 
 class MicroAPI:
 
-    def __init__(self):
-        self.router = Router()
+    def __init__(self, router: BaseRouter | None = None):
+        """
+            @constructor params
+             - router: a concrete implementation for abstract class BaseRouter,
+             if not provided then falls back to SimpleRouter instance
+        """
+        self.router = router or SimpleRouter()
 
     async def __call__(self, scope, receive, send):
         if scope['type'] != 'http':
@@ -11,10 +17,6 @@ class MicroAPI:
 
         method, path = scope['method'], scope['path']
         handler = self.router.match(method, path)
-
-        print('METHOD => ', method)
-        print('PATH => ', path)
-        print('HANDLER -> ', handler)
 
         if handler is None:
             await send(
