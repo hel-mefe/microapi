@@ -1,65 +1,36 @@
-import json
-from typing import Any
-
+from microapi.core.router import BaseRouter
+from microapi.router.simple import SimpleRouter
+from microapi.request import Request
+from microapi.response import TextResponse, JSONResponse
 from microapi.core.response import Response
 
 
-class TextResponse(Response):
-    def __init__(
-        self,
-        content: str,
-        status_code: int = 200,
-        headers: dict[str, str] | None = None,
-    ):
-        super().__init__(status_code, headers)
-        self.body = content.encode("utf-8")
-        self.headers.setdefault("content-type", "text/plain; charset=utf-8")
+class MicroAPI:
+    def __init__(self, router: BaseRouter | None = None):
+        self.router = router or SimpleRouter()
 
-    async def send(self, send) -> None:
-        await send(
-            {
-                "type": "http.response.start",
-                "status": self.status_code,
-                "headers": [
-                    (k.encode("latin-1"), v.encode("latin-1"))
-                    for k, v in self.headers.items()
-                ],
-            }
-        )
-        await send(
-            {
-                "type": "http.response.body",
-                "body": self.body,
-            }
-        )
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return
 
+        request = Request(scope, receive)
+        handler = self.router.match(request.method, request.path)
 
-class JSONResponse(Response):
-    def __init__(
-        self,
-        content: Any,
-        status_code: int = 200,
-        headers: dict[str, str] | None = None,
-    ):
-        super().__init__(status_code, headers)
-        self.body = json.dumps(content).encode("utf-8")
-        self.headers.setdefault("content-type", "application/json")
+        if handler is None:
+            response = TextResponse("Not Found", status_code=404)
+            await response.send(send)
+            return
 
-    async def send(self, send) -> None:
-        await send(
-            {
-                "type": "http.response.start",
-                "status": self.status_code,
-                "headers": [
-                    (k.encode("latin-1"), v.encode("latin-1"))
-                    for k, v in self.headers.items()
-                ],
-            }
-        )
-        await send(
-            {
-                "type": "http.response.body",
-                "body": self.body,
-            }
-        )
+        result = await handler(request)
+
+        if isinstance(result, Response):
+            response = result
+        elif isinstance(result, dict):
+            response = JSONResponse(result)
+        elif isinstance(result, str):
+            response = TextResponse(result)
+        else:
+            response = TextResponse(str(result))
+
+        await response.send(send)
 
