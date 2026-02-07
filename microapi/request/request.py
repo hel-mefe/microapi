@@ -1,7 +1,7 @@
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, Callable, Awaitable
 from microapi.core.headers import HeadersView
 from microapi.request.query import QueryParamsView
-
+import json
 
 class Request:
     def __init__(self, scope: Mapping[str, Any], receive: Optional[Callable] = None):
@@ -46,3 +46,7 @@ class Request:
             self._body = b"".join(chunks)
             self._body_consumed = True
             return self._body
+
+    async def json(self) -> Any:
+        body = await self.body()
+        return json.loads(body.decode('utf-8'))
