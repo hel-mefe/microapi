@@ -9,8 +9,12 @@ class MicroAPI:
         if scope['type'] != 'http':
             return
 
-        method = self.scope['method']
+        method, path = scope['method'], scope['path']
         handler = self.router.match(method, path)
+
+        print('METHOD => ', method)
+        print('PATH => ', path)
+        print('HANDLER -> ', handler)
 
         if handler is None:
             await send(

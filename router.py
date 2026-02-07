@@ -7,5 +7,8 @@ class Router:
         self.routes[key] = handler
 
     def match(self, method: str, path: str):
-        key = (method.upper, path)
+        key = (method.upper(), path)
+        print('MATCH CALLED -> ', key)
+        print(self.routes)
+        print(self.routes.get(key))
         return self.routes.get(key)
