@@ -1,4 +1,4 @@
-# <icroapi
+# MicroAPI
 
 MicroAPI is a minimal, FastAPI-inspired web framework built from scratch to understand how modern Python API frameworks work at a fundamental level.
 
