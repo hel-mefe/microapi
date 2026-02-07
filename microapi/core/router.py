@@ -14,9 +14,10 @@ class BaseRouter(ABC):
     """
 
     @abstractmethod
-    def add(self, method: str, path: str, handler: Handler) -> None:
+    def add(self, method: str, path: str, handler: Handler) -> Optional[tuple[Handler, dict[str, str]]]:
         """
         Register a route.
+        Return (handler, path_params) or None.
         """
         raise NotImplementedError
 
