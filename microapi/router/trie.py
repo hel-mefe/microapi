@@ -70,4 +70,4 @@ class TrieRouter(BaseRouter):
         return handler, path_params
 
     def routes(self) -> Iterable[Tupe[str, str, Handler]]:
-        raise NotImplementedError
+        raise self._routes
