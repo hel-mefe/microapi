@@ -1,6 +1,5 @@
 from microapi.router.trie import TrieRouter
 
-
 async def handler_a(request):
     return "a"
 
