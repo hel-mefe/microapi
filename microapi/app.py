@@ -6,7 +6,7 @@ from microapi.response import TextResponse, JSONResponse
 from microapi.core.response import Response
 from microapi.core.exceptions import HTTPException
 from microapi.introspection import render_endpoints_page
-from microapi.response import TextResponse
+
 
 class MicroAPI:
     def __init__(self, router: BaseRouter | None = None):
@@ -24,12 +24,15 @@ class MicroAPI:
             response.headers["content-type"] = "text/html; charset=utf-8"
             await response.send(send)
             return
-
-        handler = self.router.match(request.method, request.path)
-        if handler is None:
+        
+        match = self.router.match(request.method, request.path)
+        if match is None:
             response = TextResponse("Not Found", status_code=404)
             await response.send(send)
             return
+
+        handler, path_params = match
+        request.path_params.update(path_params)
 
         try:
             result = await handler(request)
@@ -42,6 +45,7 @@ class MicroAPI:
             await response.send(send)
             return
 
+        # --- Response normalization ---
         if isinstance(result, Response):
             response = result
         elif isinstance(result, dict):
@@ -53,4 +57,6 @@ class MicroAPI:
 
         await response.send(send)
 
+
 app = MicroAPI()
+
