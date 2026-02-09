@@ -23,6 +23,7 @@ UVICORN := uvicorn
 
 APP_MODULE     := microapi.app:app
 EXAMPLE_MODULE := example:app
+TEST_DIRECTORY := tests
 
 # -----------------------------
 # ASCII Banner
@@ -72,7 +73,7 @@ run-example:
 test:
 	@printf "$$MICROAPI_BANNER"
 	@echo "$(TEAL)▶ Running tests$(RESET)"
-	$(PYTHON) -m pytest -q
+	$(PYTHON) -m pytest -q $(TEST_DIRECTORY)
 
 test-watch:
 	@printf "$$MICROAPI_BANNER"
