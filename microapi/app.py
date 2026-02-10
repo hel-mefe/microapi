@@ -26,6 +26,13 @@ class MicroAPI:
     def add_middleware(self, middleware):
         self._middlewares.append(middleware)
 
+    def include_router(self, router):
+        for method, path, handler in router._routes:
+            self.router.add(method, path, handler)
+
+        for mw in getattr(router, "middleware", []):
+            self.add_middleware(mw)
+
     def on_startup(self, func):
         self._startup_handlers.append(func)
         return func
