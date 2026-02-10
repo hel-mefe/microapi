@@ -46,14 +46,9 @@ async def _resolve_dependency(dep, request, registry, request_cache, teardown_st
         value = await agen.__anext__()
         teardown_stack.append(agen)
     else:
-        if "request" in inspect.signature(dep).parameters:
-            result = dep(request, **kwargs)
-        else:
-            result = dep(**kwargs)
-
+        result = dep(**kwargs)
         if inspect.isawaitable(result):
             result = await result
-
         value = result
 
     request_cache[dep] = value
