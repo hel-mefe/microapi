@@ -1,3 +1,5 @@
+from collections.abc import Awaitable, Callable
+
 from microapi.core.exceptions import HTTPException
 from microapi.core.request import Request
 from microapi.core.response import Response
@@ -7,10 +9,19 @@ from microapi.request.asgi import ASGIRequest
 from microapi.response import JSONResponse, TextResponse
 from microapi.router.simple import SimpleRouter
 
+Middleware = Callable[
+    [Request, Callable[[Request], Awaitable[Response]]],
+    Awaitable[Response],
+]
+
 
 class MicroAPI:
     def __init__(self, router: BaseRouter | None = None):
         self.router = router or SimpleRouter()
+        self._middleware: list[Middleware] = []
+
+    def add_middleware(self, middleware: Middleware) -> None:
+        self._middleware.append(middleware)
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -18,12 +29,22 @@ class MicroAPI:
 
         request: Request = ASGIRequest(scope, receive)
 
+        handler = self._handle_request
+        for middleware in reversed(self._middleware):
+            next_handler = handler
+
+            async def handler(request, mw=middleware, nxt=next_handler):
+                return await mw(request, nxt)
+
+        response = await handler(request)
+        await response.send(send)
+
+    async def _handle_request(self, request: Request) -> Response:
         if request.method == "GET" and request.path == "/__endpoints__":
             html = render_endpoints_page(self.router)
             response = TextResponse(html)
             response.headers["content-type"] = "text/html; charset=utf-8"
-            await response.send(send)
-            return
+            return response
 
         if request.method == "OPTIONS":
             allowed = None
@@ -31,13 +52,11 @@ class MicroAPI:
                 allowed = self.router.allowed_methods(request.path)
 
             if allowed:
-                response = TextResponse(
+                return TextResponse(
                     "",
                     status_code=200,
                     headers={"allow": ", ".join(sorted(allowed))},
                 )
-                await response.send(send)
-                return
 
         match = self.router.match(request.method, request.path)
 
@@ -47,18 +66,13 @@ class MicroAPI:
                 allowed = self.router.allowed_methods(request.path)
 
             if allowed:
-                # Path exists, method not allowed
-                response = TextResponse(
+                return TextResponse(
                     "Method Not Allowed",
                     status_code=405,
                     headers={"allow": ", ".join(sorted(allowed))},
                 )
-            else:
-                # Path does not exist
-                response = TextResponse("Not Found", status_code=404)
 
-            await response.send(send)
-            return
+            return TextResponse("Not Found", status_code=404)
 
         handler, path_params = match
         request.path_params.update(path_params)
@@ -66,24 +80,20 @@ class MicroAPI:
         try:
             result = await handler(request)
         except HTTPException as exc:
-            response = JSONResponse(
+            return JSONResponse(
                 {"detail": exc.detail},
                 status_code=exc.status_code,
                 headers=exc.headers,
             )
-            await response.send(send)
-            return
 
         if isinstance(result, Response):
-            response = result
-        elif isinstance(result, dict):
-            response = JSONResponse(result)
-        elif isinstance(result, str):
-            response = TextResponse(result)
-        else:
-            response = TextResponse(str(result))
+            return result
+        if isinstance(result, dict):
+            return JSONResponse(result)
+        if isinstance(result, str):
+            return TextResponse(result)
 
-        await response.send(send)
+        return TextResponse(str(result))
 
 
 app = MicroAPI()
