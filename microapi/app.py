@@ -25,6 +25,20 @@ class MicroAPI:
             await response.send(send)
             return
 
+        if request.method == "OPTIONS":
+            allowed = None
+            if hasattr(self.router, "allowed_methods"):
+                allowed = self.router.allowed_methods(request.path)
+
+            if allowed:
+                response = TextResponse(
+                    "",
+                    status_code=200,
+                    headers={"allow": ", ".join(sorted(allowed))},
+                )
+                await response.send(send)
+                return
+
         match = self.router.match(request.method, request.path)
 
         if match is None:
@@ -33,14 +47,14 @@ class MicroAPI:
                 allowed = self.router.allowed_methods(request.path)
 
             if allowed:
-                headers = {"allow": ", ".join(sorted(allowed))}
-
+                # Path exists, method not allowed
                 response = TextResponse(
                     "Method Not Allowed",
                     status_code=405,
-                    headers=headers,
+                    headers={"allow": ", ".join(sorted(allowed))},
                 )
             else:
+                # Path does not exist
                 response = TextResponse("Not Found", status_code=404)
 
             await response.send(send)
@@ -60,7 +74,6 @@ class MicroAPI:
             await response.send(send)
             return
 
-        # --- Response normalization ---
         if isinstance(result, Response):
             response = result
         elif isinstance(result, dict):
