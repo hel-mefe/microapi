@@ -40,16 +40,36 @@ class MicroAPI:
             result = func()
             if hasattr(result, "__await__"):
                 await result
+        await self.registry.startup()
         self._started = True
 
     async def _run_shutdown(self):
         if not self._started:
             return
+        await self.registry.shutdown()
         for func in self._shutdown_handlers:
             result = func()
             if hasattr(result, "__await__"):
                 await result
         self._started = False
+
+    def route(self, path: str, method: str):
+        return self.router.route(path, method)
+
+    def get(self, path: str):
+        return self.router.get(path)
+
+    def post(self, path: str):
+        return self.router.post(path)
+
+    def put(self, path: str):
+        return self.router.put(path)
+
+    def delete(self, path: str):
+        return self.router.delete(path)
+
+    def patch(self, path: str):
+        return self.router.patch(path)
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "lifespan":
