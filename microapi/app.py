@@ -4,7 +4,9 @@ from microapi.core.exceptions import HTTPException
 from microapi.core.request import Request
 from microapi.core.response import Response
 from microapi.core.router import BaseRouter
+from microapi.di import resolve_dependencies
 from microapi.introspection import render_endpoints_page
+from microapi.registry import Registry
 from microapi.request.asgi import ASGIRequest
 from microapi.response import JSONResponse, TextResponse
 from microapi.router.simple import SimpleRouter
@@ -19,6 +21,7 @@ class MicroAPI:
     def __init__(self, router: BaseRouter | None = None):
         self.router = router or SimpleRouter()
         self._middleware: list[Middleware] = []
+        self.registry = Registry()
 
     def add_middleware(self, middleware: Middleware) -> None:
         self._middleware.append(middleware)
@@ -77,8 +80,16 @@ class MicroAPI:
         handler, path_params = match
         request.path_params.update(path_params)
 
+        request_cache: dict[str, object] = {}
+
         try:
-            result = await handler(request)
+            kwargs = await resolve_dependencies(
+                handler,
+                request,
+                self.registry,
+                request_cache,
+            )
+            result = await handler(**kwargs)
         except HTTPException as exc:
             return JSONResponse(
                 {"detail": exc.detail},
