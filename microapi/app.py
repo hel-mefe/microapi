@@ -1,3 +1,5 @@
+import inspect
+
 from microapi.core.exceptions import HTTPException
 from microapi.core.request import Request
 from microapi.core.response import Response
@@ -38,7 +40,7 @@ class MicroAPI:
             return
         for func in self._startup_handlers:
             result = func()
-            if hasattr(result, "__await__"):
+            if inspect.isawaitable(result):
                 await result
         await self.registry.startup()
         self._started = True
@@ -49,7 +51,7 @@ class MicroAPI:
         await self.registry.shutdown()
         for func in self._shutdown_handlers:
             result = func()
-            if hasattr(result, "__await__"):
+            if inspect.isawaitable(result):
                 await result
         self._started = False
 
@@ -73,21 +75,13 @@ class MicroAPI:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "lifespan":
-            try:
-                message = await receive()
-                if message["type"] == "lifespan.startup":
-                    await self._run_startup()
-                    await send({"type": "lifespan.startup.complete"})
-                elif message["type"] == "lifespan.shutdown":
-                    await self._run_shutdown()
-                    await send({"type": "lifespan.shutdown.complete"})
-            except Exception as exc:
-                await send(
-                    {
-                        "type": "lifespan.startup.failed",
-                        "message": str(exc),
-                    }
-                )
+            message = await receive()
+            if message["type"] == "lifespan.startup":
+                await self._run_startup()
+                await send({"type": "lifespan.startup.complete"})
+            elif message["type"] == "lifespan.shutdown":
+                await self._run_shutdown()
+                await send({"type": "lifespan.shutdown.complete"})
             return
 
         if scope["type"] != "http":
@@ -105,7 +99,6 @@ class MicroAPI:
                 return response
 
             match = self.router.match(request.method, request.path)
-
             if match is None:
                 allowed = self.router.allowed_methods(request.path)
                 if allowed:
@@ -131,7 +124,13 @@ class MicroAPI:
                     teardown_stack,
                     self.dependency_overrides,
                 )
-                result = await handler(**kwargs)
+
+                sig = inspect.signature(handler)
+                if "request" in sig.parameters and "request" not in kwargs:
+                    result = await handler(request)
+                else:
+                    result = await handler(**kwargs)
+
             except HTTPException as exc:
                 response = JSONResponse(
                     {"detail": exc.detail},
