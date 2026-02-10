@@ -1,6 +1,7 @@
 import inspect
 from typing import Any
 
+from microapi.background import BackgroundTasks
 from microapi.dependencies import Depends
 
 
@@ -19,7 +20,10 @@ async def resolve_dependencies(
     for name, param in sig.parameters.items():
         default = param.default
 
-        if isinstance(default, Depends):
+        if param.annotation is BackgroundTasks:
+            values[name] = BackgroundTasks()
+
+        elif isinstance(default, Depends):
             values[name] = await _resolve_dependency(
                 default.dependency,
                 request,
@@ -28,6 +32,7 @@ async def resolve_dependencies(
                 teardown_stack,
                 overrides,
             )
+
         elif name == "request":
             values[name] = request
 

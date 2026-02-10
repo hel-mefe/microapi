@@ -1,3 +1,4 @@
+from microapi.background import BackgroundTasks
 from microapi.core.exceptions import HTTPException
 from microapi.core.request import Request
 from microapi.core.response import Response
@@ -89,7 +90,7 @@ class MicroAPI:
 
         request: Request = ASGIRequest(scope, receive)
 
-        async def app_handler(request):
+        async def app_handler(request: Request) -> Response:
             if request.method == "GET" and request.path == "/__endpoints__":
                 html = render_endpoints_page(self.router)
                 response = TextResponse(html)
@@ -113,6 +114,8 @@ class MicroAPI:
             teardown_stack = []
             request_cache = {}
 
+            background_tasks = None
+
             try:
                 kwargs = await resolve_dependencies(
                     handler,
@@ -123,25 +126,21 @@ class MicroAPI:
                     self.dependency_overrides,
                 )
 
+                for value in kwargs.values():
+                    if isinstance(value, BackgroundTasks):
+                        background_tasks = value
+                        break
+
                 result = await handler(**kwargs)
 
             except HTTPException as exc:
-                response = JSONResponse(
+                return JSONResponse(
                     {"detail": exc.detail},
                     status_code=exc.status_code,
                     headers=exc.headers,
                 )
             except Exception:
-                response = TextResponse("Internal Server Error", status_code=500)
-            else:
-                if isinstance(result, Response):
-                    response = result
-                elif isinstance(result, dict):
-                    response = JSONResponse(result)
-                elif isinstance(result, str):
-                    response = TextResponse(result)
-                else:
-                    response = TextResponse(str(result))
+                return TextResponse("Internal Server Error", status_code=500)
             finally:
                 for agen in reversed(teardown_stack):
                     try:
@@ -149,6 +148,16 @@ class MicroAPI:
                     except StopAsyncIteration:
                         pass
 
+            if isinstance(result, Response):
+                response = result
+            elif isinstance(result, dict):
+                response = JSONResponse(result)
+            elif isinstance(result, str):
+                response = TextResponse(result)
+            else:
+                response = TextResponse(str(result))
+
+            response._background_tasks = background_tasks
             return response
 
         handler = app_handler
@@ -159,7 +168,12 @@ class MicroAPI:
                 return await middleware(request, next_handler)
 
         response = await handler(request)
+
         await response.send(send)
+
+        background_tasks = getattr(response, "_background_tasks", None)
+        if background_tasks:
+            await background_tasks.run()
 
 
 app = MicroAPI()
