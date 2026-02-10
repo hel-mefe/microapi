@@ -1,5 +1,3 @@
-import inspect
-
 from microapi.core.exceptions import HTTPException
 from microapi.core.request import Request
 from microapi.core.response import Response
@@ -40,7 +38,7 @@ class MicroAPI:
             return
         for func in self._startup_handlers:
             result = func()
-            if inspect.isawaitable(result):
+            if hasattr(result, "__await__"):
                 await result
         await self.registry.startup()
         self._started = True
@@ -51,7 +49,7 @@ class MicroAPI:
         await self.registry.shutdown()
         for func in self._shutdown_handlers:
             result = func()
-            if inspect.isawaitable(result):
+            if hasattr(result, "__await__"):
                 await result
         self._started = False
 
@@ -125,11 +123,7 @@ class MicroAPI:
                     self.dependency_overrides,
                 )
 
-                sig = inspect.signature(handler)
-                if "request" in sig.parameters and "request" not in kwargs:
-                    result = await handler(request)
-                else:
-                    result = await handler(**kwargs)
+                result = await handler(**kwargs)
 
             except HTTPException as exc:
                 response = JSONResponse(

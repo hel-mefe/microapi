@@ -1,83 +1,57 @@
-from collections.abc import Iterable
-
 from microapi.core.router import BaseRouter
-from microapi.core.types import Handler
 from microapi.router.utils import is_param, param_name, split_path
 
 
 class TrieNode:
     def __init__(self):
-        self.static_children: dict[str, TrieNode] = {}
-        self.param_child: TrieNode | None = None
-        self.param_name: str | None = None
-        self.handlers: dict[str, Handler] = {}
+        self.static = {}
+        self.param = None
+        self.param_name = None
+        self.handlers = {}
 
 
 class TrieRouter(BaseRouter):
     def __init__(self):
         self.root = TrieNode()
-        self._routes: list[tuple[str, str, Handler]] = []
 
-    def add(self, method: str, path: str, handler: Handler) -> None:
+    def add(self, method: str, path: str, handler):
         node = self.root
-        segments = split_path(path)
-
-        for segment in segments:
+        for segment in split_path(path):
             if is_param(segment):
-                name = param_name(segment)
-
-                if node.param_child is None:
-                    node.param_child = TrieNode()
-                    node.param_child.param_name = name
-
-                node = node.param_child
+                if node.param is None:
+                    node.param = TrieNode()
+                    node.param_name = param_name(segment)
+                node = node.param
             else:
-                if segment not in node.static_children:
-                    node.static_children[segment] = TrieNode()
-                node = node.static_children[segment]
-
+                node = node.static.setdefault(segment, TrieNode())
         node.handlers[method.upper()] = handler
-        self._routes.append((method.upper(), path, handler))
 
     def match(self, method: str, path: str):
         node = self.root
-        segments = split_path(path)
-        path_params: dict[str, str] = {}
+        params = {}
 
-        for segment in segments:
-            if segment in node.static_children:
-                node = node.static_children[segment]
-                continue
-
-            if node.param_child is not None:
-                path_params[node.param_child.param_name] = segment
-                node = node.param_child
-                continue
-
-            return None
+        for segment in split_path(path):
+            if segment in node.static:
+                node = node.static[segment]
+            elif node.param:
+                params[node.param_name] = segment
+                node = node.param
+            else:
+                return None
 
         handler = node.handlers.get(method.upper())
         if handler is None:
             return None
 
-        return handler, path_params
+        return handler, params
 
-    def allowed_methods(self, path: str) -> set[str] | None:
+    def allowed_methods(self, path: str) -> set[str]:
         node = self.root
-        segments = split_path(path)
-
-        for segment in segments:
-            if segment in node.static_children:
-                node = node.static_children[segment]
-                continue
-
-            if node.param_child is not None:
-                node = node.param_child
-                continue
-
-            return None
-
+        for segment in split_path(path):
+            if segment in node.static:
+                node = node.static[segment]
+            elif node.param:
+                node = node.param
+            else:
+                return set()
         return set(node.handlers.keys())
-
-    def routes(self) -> Iterable[tuple[str, str, Handler]]:
-        return self._routes

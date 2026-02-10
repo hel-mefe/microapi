@@ -1,21 +1,18 @@
-from collections.abc import Iterable
-
 from microapi.core.router import BaseRouter
-from microapi.core.types import Handler
 
 
 class SimpleRouter(BaseRouter):
     def __init__(self):
-        self._routes = {}
+        self._routes: dict[tuple[str, str], callable] = {}
 
     def add(self, method: str, path: str, handler):
-        key = (method.upper(), path)
-        self._routes[key] = handler
+        self._routes[(method.upper(), path)] = handler
 
     def match(self, method: str, path: str):
-        key = (method.upper(), path)
-        return self._routes.get(key)
+        handler = self._routes.get((method.upper(), path))
+        if handler is None:
+            return None
+        return handler, {}
 
-    def routes(self) -> Iterable[tuple[str, str, Handler]]:
-        for (method, path), handler in self._routes.items():
-            yield method, path, handler
+    def allowed_methods(self, path: str) -> set[str]:
+        return {method for (method, p) in self._routes.keys() if p == path}
