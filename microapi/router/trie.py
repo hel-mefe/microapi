@@ -1,21 +1,21 @@
-from typing import Dict, Optional, Tuple, Iterable
+from collections.abc import Iterable
 
 from microapi.core.router import BaseRouter
 from microapi.core.types import Handler
-from microapi.router.utils import split_path, is_param, param_name
+from microapi.router.utils import is_param, param_name, split_path
 
 
 class TrieNode:
     def __init__(self):
         # Static segments: "users", "posts", etc.
-        self.static_children: Dict[str, "TrieNode"] = {}
+        self.static_children: dict[str, TrieNode] = {}
 
         # Dynamic segment: "{id}"
-        self.param_child: Optional["TrieNode"] = None
-        self.param_name: Optional[str] = None
+        self.param_child: TrieNode | None = None
+        self.param_name: str | None = None
 
         # HTTP method -> handler
-        self.handlers: Dict[str, Handler] = {}
+        self.handlers: dict[str, Handler] = {}
 
 
 class TrieRouter(BaseRouter):
@@ -45,9 +45,7 @@ class TrieRouter(BaseRouter):
         node.handlers[method.upper()] = handler
         self._routes.append((method.upper(), path, handler))
 
-    def match(
-        self, method: str, path: str
-    ) -> Optional[tuple[Handler, dict[str, str]]]:
+    def match(self, method: str, path: str) -> tuple[Handler, dict[str, str]] | None:
         node = self.root
         segments = split_path(path)
         params: dict[str, str] = {}
@@ -73,6 +71,5 @@ class TrieRouter(BaseRouter):
 
         return handler, params
 
-    def routes(self) -> Iterable[Tuple[str, str, Handler]]:
+    def routes(self) -> Iterable[tuple[str, str, Handler]]:
         return self._routes
-

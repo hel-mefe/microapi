@@ -1,6 +1,8 @@
+from collections.abc import Iterable
+
 from microapi.core.router import BaseRouter
 from microapi.core.types import Handler
-from typing import Iterable, Tuple
+
 
 class SimpleRouter(BaseRouter):
     def __init__(self):
@@ -14,6 +16,6 @@ class SimpleRouter(BaseRouter):
         key = (method.upper(), path)
         return self._routes.get(key)
 
-    def routes(self) -> Iterable[Tuple[str, str, Handler]]:
+    def routes(self) -> Iterable[tuple[str, str, Handler]]:
         for (method, path), handler in self._routes.items():
             yield method, path, handler

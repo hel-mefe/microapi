@@ -1,5 +1,6 @@
 from microapi.router.trie import TrieRouter
 
+
 async def handler_a(request):
     return "a"
 
@@ -63,4 +64,3 @@ def test_unknown_path_returns_none():
     result = router.match("GET", "/does-not-exist")
 
     assert result is None
-

@@ -15,4 +15,3 @@ GET /endpoints
 - Owned entirely by the framework
 
 This feature is intended for development and debugging.
-

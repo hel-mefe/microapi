@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Any, Mapping, Protocol
+from collections.abc import Mapping
+from typing import Any
 
 from microapi.core.headers import HeadersView
 
@@ -30,4 +31,3 @@ class Request(ABC):
     @abstractmethod
     async def json(self) -> Any:
         raise NotImplementedError
-

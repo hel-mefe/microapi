@@ -22,4 +22,3 @@ Handlers may return:
 - A string (converted to text)
 
 This ensures consistent HTTP semantics.
-

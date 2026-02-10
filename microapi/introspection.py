@@ -1,5 +1,5 @@
 from microapi.core.router import BaseRouter
-import os
+
 
 def render_endpoints_page(router: BaseRouter) -> str:
     rows = []
@@ -80,4 +80,3 @@ def render_endpoints_page(router: BaseRouter) -> str:
         </body>
     </html>
     """
-

@@ -81,12 +81,19 @@ test-watch:
 	$(PYTHON) -m pytest -q -x --lf --disable-warnings --maxfail=1
 
 lint:
-	@printf "$$MICROAPI_BANNER"
-	@echo "$(TEAL)▶ Linting (syntax check)$(RESET)"
-	$(PYTHON) -m compileall microapi
+	@echo "$(TEAL)▶ Running Ruff linting$(RESET)"
+	ruff check .
+
+lint-fix:
+	@echo "$(TEAL)▶ Running Ruff (auto-fix)$(RESET)"
+	ruff check . --fix
+
+precommit:
+	@echo "$(TEAL)▶ Running pre-commit on all files$(RESET)"
+	pre-commit run --all-files
+
 
 clean:
 	@echo "$(TEAL)▶ Cleaning cache files$(RESET)"
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
-

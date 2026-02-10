@@ -14,16 +14,16 @@ Rather than focusing on ergonomics first, MicroAPI prioritizes **semantic correc
 
 MicroAPI is built around a few core principles:
 
-- **Explicit over implicit**  
+- **Explicit over implicit**
   No hidden magic or reflection-heavy behavior. Control flow is visible and intentional.
 
-- **Semantics before ergonomics**  
+- **Semantics before ergonomics**
   Core behavior (routing, request flow, errors) is locked down before adding decorators or syntactic sugar.
 
-- **Deterministic behavior**  
+- **Deterministic behavior**
   Routing, error handling, and request mutation follow strict, predictable rules.
 
-- **Framework-owned HTTP semantics**  
+- **Framework-owned HTTP semantics**
   Business logic is isolated from transport and protocol concerns.
 
 This project is both an educational deep dive and a serious foundation for a minimal framework.
@@ -32,10 +32,10 @@ This project is both an educational deep dive and a serious foundation for a min
 
 ## Key Features
 
-- **ASGI-compliant core**  
+- **ASGI-compliant core**
   Built directly on the ASGI specification, with a clean application boundary.
 
-- **Trie-based HTTP router**  
+- **Trie-based HTTP router**
   Custom router implementation using a Trie data structure, enabling:
   - Linear-time route matching (O(path length))
   - Static and parameterized paths (`/users/{id}`)
@@ -157,6 +157,3 @@ This project explores that question by re-implementing core ideas from FastAPI a
 ## License
 
 MIT License
-
-
-

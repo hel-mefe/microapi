@@ -11,4 +11,3 @@ Planned development milestones:
 7. Static file support
 
 Each feature will be added incrementally without breaking existing abstractions.
-

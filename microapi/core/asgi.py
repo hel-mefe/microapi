@@ -1,15 +1,14 @@
-from typing import Any, Awaitable, Callable, Dict
+from collections.abc import Awaitable, Callable
+from typing import Any
 
-Scope = Dict[str, Any]
+Scope = dict[str, Any]
 
 Receive = Callable[
     [],
-    Awaitable[Dict[str, Any]],
+    Awaitable[dict[str, Any]],
 ]
 
 Send = Callable[
-    [Dict[str, Any]],
+    [dict[str, Any]],
     Awaitable[None],
 ]
-
-

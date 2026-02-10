@@ -1,6 +1,7 @@
-from typing import Awaitable, Callable, Dict, List, NewType
+from collections.abc import Awaitable, Callable
+from typing import NewType
 
 Handler = Callable[..., Awaitable[object]]
 HeaderName = NewType("HeaderName", str)
 HeaderValue = NewType("HeaderValue", str)
-QueryParams = Dict[str, List[str]]
+QueryParams = dict[str, list[str]]

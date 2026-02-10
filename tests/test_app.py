@@ -1,14 +1,15 @@
 import pytest
 
 from microapi.app import MicroAPI
-from microapi.router.trie import TrieRouter
 from microapi.core.exceptions import HTTPException
+from microapi.router.trie import TrieRouter
 
 
 class SendCollector:
     """
     Collects ASGI send() messages for inspection.
     """
+
     def __init__(self):
         self.messages = []
 
@@ -117,4 +118,3 @@ async def test_http_exception_is_handled_by_framework():
 
     assert send.messages[0]["status"] == 400
     assert b"bad request" in send.messages[1]["body"]
-

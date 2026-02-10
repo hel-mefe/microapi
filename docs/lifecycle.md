@@ -13,4 +13,3 @@ These hooks will allow:
 - Connection management
 
 Lifecycle handling is isolated from request processing.
-

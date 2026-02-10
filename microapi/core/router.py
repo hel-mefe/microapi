@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+
 from .types import Handler
 
 
@@ -14,7 +14,9 @@ class BaseRouter(ABC):
     """
 
     @abstractmethod
-    def add(self, method: str, path: str, handler: Handler) -> Optional[tuple[Handler, dict[str, str]]]:
+    def add(
+        self, method: str, path: str, handler: Handler
+    ) -> tuple[Handler, dict[str, str]] | None:
         """
         Register a route.
         Return (handler, path_params) or None.
@@ -22,9 +24,8 @@ class BaseRouter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def match(self, method: str, path: str) -> Optional[Handler]:
+    def match(self, method: str, path: str) -> Handler | None:
         """
         Resolve a request to a handler.
         """
         raise NotImplementedError
-

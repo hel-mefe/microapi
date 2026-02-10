@@ -25,8 +25,7 @@ class TextResponse(Response):
                 "type": "http.response.start",
                 "status": self.status_code,
                 "headers": [
-                    (k.encode("latin-1"), v.encode("latin-1"))
-                    for k, v in self.headers.items()
+                    (k.encode("latin-1"), v.encode("latin-1")) for k, v in self.headers.items()
                 ],
             }
         )
@@ -36,4 +35,3 @@ class TextResponse(Response):
                 "body": self._body,
             }
         )
-

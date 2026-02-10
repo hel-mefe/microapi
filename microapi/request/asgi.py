@@ -1,8 +1,9 @@
-from typing import Any, Mapping, Optional, Callable, Awaitable
 import json
+from collections.abc import Awaitable, Callable, Mapping
+from typing import Any
 
-from microapi.core.request import Request as RequestInterface
 from microapi.core.headers import HeadersView
+from microapi.core.request import Request as RequestInterface
 from microapi.request.query import QueryParamsView
 
 
@@ -10,6 +11,7 @@ class State:
     """
     Per-request mutable state.
     """
+
     pass
 
 
@@ -21,7 +23,7 @@ class ASGIRequest(RequestInterface):
     def __init__(
         self,
         scope: Mapping[str, Any],
-        receive: Optional[Callable[[], Awaitable[dict]]] = None,
+        receive: Callable[[], Awaitable[dict]] | None = None,
     ):
         self._scope = scope
         self._receive = receive
@@ -34,11 +36,10 @@ class ASGIRequest(RequestInterface):
         self.state = State()
 
         self._query_string: bytes = scope.get("query_string", b"")
-        self._query: Optional[QueryParamsView] = None
+        self._query: QueryParamsView | None = None
 
-        self._body: Optional[bytes] = None
+        self._body: bytes | None = None
         self._body_consumed: bool = False
-
 
     @property
     def query(self) -> QueryParamsView:
@@ -71,8 +72,6 @@ class ASGIRequest(RequestInterface):
         self._body_consumed = True
         return self._body
 
-
     async def json(self) -> Any:
         body = await self.body()
         return json.loads(body.decode("utf-8"))
-

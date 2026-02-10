@@ -18,4 +18,3 @@ Handlers raise exceptions instead of constructing responses.
 - Predictable behavior under failure
 
 Unexpected exceptions are allowed to bubble up during development.
-

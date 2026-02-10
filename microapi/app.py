@@ -1,11 +1,11 @@
-from microapi.core.router import BaseRouter
-from microapi.router.simple import SimpleRouter
-from microapi.core.request import Request
-from microapi.request.asgi import ASGIRequest
-from microapi.response import TextResponse, JSONResponse
-from microapi.core.response import Response
 from microapi.core.exceptions import HTTPException
+from microapi.core.request import Request
+from microapi.core.response import Response
+from microapi.core.router import BaseRouter
 from microapi.introspection import render_endpoints_page
+from microapi.request.asgi import ASGIRequest
+from microapi.response import JSONResponse, TextResponse
+from microapi.router.simple import SimpleRouter
 
 
 class MicroAPI:
@@ -24,10 +24,25 @@ class MicroAPI:
             response.headers["content-type"] = "text/html; charset=utf-8"
             await response.send(send)
             return
-        
+
         match = self.router.match(request.method, request.path)
+
         if match is None:
-            response = TextResponse("Not Found", status_code=404)
+            allowed = None
+            if hasattr(self.router, "allowed_methods"):
+                allowed = self.router.allowed_methods(request.path)
+
+            if allowed:
+                headers = {"allow": ", ".join(sorted(allowed))}
+
+                response = TextResponse(
+                    "Method Not Allowed",
+                    status_code=405,
+                    headers=headers,
+                )
+            else:
+                response = TextResponse("Not Found", status_code=404)
+
             await response.send(send)
             return
 
@@ -59,4 +74,3 @@ class MicroAPI:
 
 
 app = MicroAPI()
-

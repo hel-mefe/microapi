@@ -30,5 +30,3 @@ This ensures predictable routing behavior.
 - Wildcard (`/*`) routes
 
 These are deferred to middleware or future extensions.
-
-

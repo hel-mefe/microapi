@@ -29,4 +29,3 @@ The framework is structured to separate:
    - Free from HTTP and ASGI concerns
 
 This separation ensures correctness, testability, and extensibility.
-

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Dict
 
-Headers = Dict[str, str]
+Headers = dict[str, str]
 
 
 class Response(ABC):
@@ -23,4 +22,3 @@ class Response(ABC):
         Send ASGI response messages.
         """
         raise NotImplementedError
-

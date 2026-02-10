@@ -10,4 +10,3 @@ Middleware is a planned feature designed to wrap request handling.
 - Authentication and authorization
 
 Middleware will be introduced without modifying routing semantics.
-

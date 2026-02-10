@@ -1,7 +1,9 @@
-from typing import Iterator, Mapping, Optional, List, Tuple
+from collections.abc import Iterator, Mapping
+
 from .types import HeaderName, HeaderValue
 
-ASGIHeaders = List[Tuple[bytes, bytes]]
+ASGIHeaders = list[tuple[bytes, bytes]]
+
 
 class HeadersView(Mapping[str, str]):
     """
@@ -24,7 +26,7 @@ class HeadersView(Mapping[str, str]):
     def __getitem__(self, key: str) -> str:
         return self._headers[HeaderName(key.lower())]
 
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get(self, key: str, default: str | None = None) -> str | None:
         return self._headers.get(HeaderName(key.lower()), default)
 
     def __iter__(self) -> Iterator[str]:
@@ -32,4 +34,3 @@ class HeadersView(Mapping[str, str]):
 
     def __len__(self) -> int:
         return len(self._headers)
-

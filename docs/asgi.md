@@ -15,4 +15,3 @@ MicroAPI is fully compliant with the ASGI specification.
 - ASGI lifecycle events are handled at the framework level
 
 This approach prevents protocol leakage into business logic.
-

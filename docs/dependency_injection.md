@@ -12,4 +12,3 @@ DI depends on:
 Introducing DI too early would compromise architectural clarity.
 
 DI will be added once core semantics are fully locked.
-
