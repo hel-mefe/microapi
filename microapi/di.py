@@ -4,7 +4,7 @@ from typing import Any
 from microapi.dependencies import Depends
 
 
-async def resolve_dependencies(func, request, registry, request_cache) -> dict[str, Any]:
+async def resolve_dependencies(func, request, registry, request_cache, teardown_stack):
     sig = inspect.signature(func)
     values: dict[str, Any] = {}
 
@@ -17,6 +17,7 @@ async def resolve_dependencies(func, request, registry, request_cache) -> dict[s
                 request,
                 registry,
                 request_cache,
+                teardown_stack,
             )
 
         elif name == "request":
@@ -25,22 +26,35 @@ async def resolve_dependencies(func, request, registry, request_cache) -> dict[s
     return values
 
 
-async def _resolve_dependency(dep, request, registry, request_cache):
+async def _resolve_dependency(dep, request, registry, request_cache, teardown_stack):
     if isinstance(dep, str):
         return registry.resolve(dep, request_cache)
 
     if dep in request_cache:
         return request_cache[dep]
 
-    kwargs = await resolve_dependencies(dep, request, registry, request_cache)
+    kwargs = await resolve_dependencies(
+        dep,
+        request,
+        registry,
+        request_cache,
+        teardown_stack,
+    )
 
-    if "request" in inspect.signature(dep).parameters:
-        result = dep(request, **kwargs)
+    if inspect.isasyncgenfunction(dep):
+        agen = dep(**kwargs)
+        value = await agen.__anext__()
+        teardown_stack.append(agen)
     else:
-        result = dep(**kwargs)
+        if "request" in inspect.signature(dep).parameters:
+            result = dep(request, **kwargs)
+        else:
+            result = dep(**kwargs)
 
-    if inspect.isawaitable(result):
-        result = await result
+        if inspect.isawaitable(result):
+            result = await result
 
-    request_cache[dep] = result
-    return result
+        value = result
+
+    request_cache[dep] = value
+    return value
