@@ -4,22 +4,13 @@ from microapi.response import TextResponse
 
 
 class CORSMiddleware:
-    """ "
-    L middleware khasso bdarroura ykon callable, that's important
-
-    in addition to that, kaynin parameters to customize cors
-
-    - allow_origins: origins li can send us a request
-    - allow_methods: methods li we allow
-    - allow_headers: headers li we allow
-
-    User dial microapi is supposed y setti credentials
-
-    Note: by default we allow all origins, all methods, all headers
-
-    """
-
-    def __init__(self, allow_origins=None, allow_methods=None, allow_headers=None):
+    def __init__(
+        self,
+        allow_origins=None,
+        allow_methods=None,
+        allow_headers=None,
+        allow_credentials: bool = False,
+    ):
         self.allow_origins = allow_origins or ["*"]
         self.allow_methods = allow_methods or [
             "GET",
@@ -30,6 +21,10 @@ class CORSMiddleware:
             "OPTIONS",
         ]
         self.allow_headers = allow_headers or ["*"]
+        self.allow_credentials = allow_credentials
+
+        if self.allow_credentials and "*" in self.allow_origins:
+            raise ValueError("CORS with credentials cannot use wildcard '*' for allow_origins")
 
     async def __call__(self, request: Request, call_next) -> Response:
         origin = request.headers.get("origin")
@@ -52,5 +47,7 @@ class CORSMiddleware:
             response.headers["access-control-allow-origin"] = origin
 
         response.headers["access-control-allow-methods"] = ", ".join(self.allow_methods)
-
         response.headers["access-control-allow-headers"] = ", ".join(self.allow_headers)
+
+        if self.allow_credentials:
+            response.headers["access-control-allow-credentials"] = "true"
