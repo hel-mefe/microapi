@@ -16,12 +16,64 @@ class MicroAPI:
         self.registry = Registry()
         self._middlewares = []
 
+        self._startup_handlers = []
+        self._shutdown_handlers = []
+        self._started = False
+
+        self.dependency_overrides = {}
+
     def add_middleware(self, middleware):
         self._middlewares.append(middleware)
 
+    def on_startup(self, func):
+        self._startup_handlers.append(func)
+        return func
+
+    def on_shutdown(self, func):
+        self._shutdown_handlers.append(func)
+        return func
+
+    async def _run_startup(self):
+        if self._started:
+            return
+        for func in self._startup_handlers:
+            result = func()
+            if hasattr(result, "__await__"):
+                await result
+        self._started = True
+
+    async def _run_shutdown(self):
+        if not self._started:
+            return
+        for func in self._shutdown_handlers:
+            result = func()
+            if hasattr(result, "__await__"):
+                await result
+        self._started = False
+
     async def __call__(self, scope, receive, send):
+        if scope["type"] == "lifespan":
+            try:
+                message = await receive()
+                if message["type"] == "lifespan.startup":
+                    await self._run_startup()
+                    await send({"type": "lifespan.startup.complete"})
+                elif message["type"] == "lifespan.shutdown":
+                    await self._run_shutdown()
+                    await send({"type": "lifespan.shutdown.complete"})
+            except Exception as exc:
+                await send(
+                    {
+                        "type": "lifespan.startup.failed",
+                        "message": str(exc),
+                    }
+                )
+            return
+
         if scope["type"] != "http":
             return
+
+        await self._run_startup()
 
         request: Request = ASGIRequest(scope, receive)
 
@@ -37,14 +89,12 @@ class MicroAPI:
             if match is None:
                 allowed = self.router.allowed_methods(request.path)
                 if allowed:
-                    response = TextResponse(
+                    return TextResponse(
                         "Method Not Allowed",
                         status_code=405,
                         headers={"allow": ", ".join(sorted(allowed))},
                     )
-                else:
-                    response = TextResponse("Not Found", status_code=404)
-                return response
+                return TextResponse("Not Found", status_code=404)
 
             handler, path_params = match
             request.path_params = path_params
@@ -59,6 +109,7 @@ class MicroAPI:
                     self.registry,
                     request_cache,
                     teardown_stack,
+                    self.dependency_overrides,
                 )
                 result = await handler(**kwargs)
             except HTTPException as exc:
