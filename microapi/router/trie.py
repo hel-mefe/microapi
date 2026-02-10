@@ -7,14 +7,9 @@ from microapi.router.utils import is_param, param_name, split_path
 
 class TrieNode:
     def __init__(self):
-        # Static segments: "users", "posts", etc.
         self.static_children: dict[str, TrieNode] = {}
-
-        # Dynamic segment: "{id}"
         self.param_child: TrieNode | None = None
         self.param_name: str | None = None
-
-        # HTTP method -> handler
         self.handlers: dict[str, Handler] = {}
 
 
@@ -39,37 +34,50 @@ class TrieRouter(BaseRouter):
             else:
                 if segment not in node.static_children:
                     node.static_children[segment] = TrieNode()
-
                 node = node.static_children[segment]
 
         node.handlers[method.upper()] = handler
         self._routes.append((method.upper(), path, handler))
 
-    def match(self, method: str, path: str) -> tuple[Handler, dict[str, str]] | None:
+    def match(self, method: str, path: str):
         node = self.root
         segments = split_path(path)
-        params: dict[str, str] = {}
+        path_params: dict[str, str] = {}
 
         for segment in segments:
-            # 1. Static match has priority
             if segment in node.static_children:
                 node = node.static_children[segment]
                 continue
 
-            # 2. Dynamic match
             if node.param_child is not None:
-                params[node.param_child.param_name] = segment
+                path_params[node.param_child.param_name] = segment
                 node = node.param_child
                 continue
 
-            # 3. No match
             return None
 
         handler = node.handlers.get(method.upper())
         if handler is None:
             return None
 
-        return handler, params
+        return handler, path_params
+
+    def allowed_methods(self, path: str) -> set[str] | None:
+        node = self.root
+        segments = split_path(path)
+
+        for segment in segments:
+            if segment in node.static_children:
+                node = node.static_children[segment]
+                continue
+
+            if node.param_child is not None:
+                node = node.param_child
+                continue
+
+            return None
+
+        return set(node.handlers.keys())
 
     def routes(self) -> Iterable[tuple[str, str, Handler]]:
         return self._routes
