@@ -16,3 +16,6 @@ class SimpleRouter(BaseRouter):
 
     def allowed_methods(self, path: str) -> set[str]:
         return {method for (method, p) in self._routes.keys() if p == path}
+
+    def routes(self):
+        return self._routes

@@ -1,7 +1,7 @@
-from microapi.core.router import BaseRouter
+from microapi.router.simple import SimpleRouter
 
 
-def render_endpoints_page(router: BaseRouter) -> str:
+def render_endpoints_page(router: SimpleRouter) -> str:
     rows = []
 
     for method, path, handler in router.routes():
