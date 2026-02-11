@@ -146,40 +146,6 @@ async def handler(db=Depends(get_db)):
 
 ```
 
-### Project Structure
-
-microapi/
-├── app.py
-├── background.py
-├── di.py
-├── registry.py
-├── dependencies.py
-├── core/
-│   ├── request.py
-│   ├── response.py
-│   ├── router.py
-│   ├── middleware.py
-│   └── exceptions.py
-├── request/
-│   └── asgi.py
-├── response/
-│   ├── text.py
-│   └── json.py
-├── router/
-│   ├── trie.py
-│   ├── simple.py
-│   └── utils.py
-├── middleware/
-│   ├── cors.py
-│   └── logging.py
-├── introspection.py
-tests/
-└── ...
-
-├── introspection.py
-tests/
-└── ...
-
 
 ### What MicroAPI Is Not (By Design)
 
