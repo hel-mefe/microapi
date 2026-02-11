@@ -1,5 +1,8 @@
 # MicroAPI
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/926e2c12-3826-400a-9b1a-343fb94fae3d" />
+
+
 **MicroAPI** is a minimal, deterministic ASGI web framework built from first principles to explore the core architectural requirements of modern Python web frameworks.
 
 It intentionally re-implements fundamental concepts found in frameworks like FastAPI and Starlette—routing, middleware, dependency injection, lifespan events—without shortcuts or hidden abstractions.
