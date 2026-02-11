@@ -1,6 +1,6 @@
 # MicroAPI
 
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/591ef213-b019-4d95-a817-38cb1e7879c1" />
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/02cf174c-0316-479c-8e0d-5c4e5fcfe5f5" />
 
 
 **MicroAPI** is a minimal, deterministic ASGI web framework built from first principles to explore the core architectural requirements of modern Python web frameworks.
