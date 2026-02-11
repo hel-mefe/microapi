@@ -1,101 +1,89 @@
 # MicroAPI
 
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/1c21e035-5a76-4754-9b40-7fadc8627ffe" />
+**MicroAPI** is a minimal, deterministic ASGI web framework built from first principles to explore the core architectural requirements of modern Python web frameworks.
 
-# MicroAPI
+It intentionally re-implements fundamental concepts found in frameworks like FastAPI and Starlette—routing, middleware, dependency injection, lifespan events—without shortcuts or hidden abstractions.
 
-**MicroAPI** is a minimal, FastAPI-inspired **ASGI web framework built from scratch**, designed to explore and demonstrate the core mechanics of modern Python web frameworks with an emphasis on **explicit architecture, deterministic routing, and extensibility**.
-
-Rather than focusing on ergonomics first, MicroAPI prioritizes **semantic correctness**, clean separation of concerns, and a foundation that can scale to advanced features such as middleware, dependency injection, CORS, and lifecycle events.
-
----
-
-## Goals & Philosophy
-
-MicroAPI is built around a few core principles:
-
-- **Explicit over implicit**
-  No hidden magic or reflection-heavy behavior. Control flow is visible and intentional.
-
-- **Semantics before ergonomics**
-  Core behavior (routing, request flow, errors) is locked down before adding decorators or syntactic sugar.
-
-- **Deterministic behavior**
-  Routing, error handling, and request mutation follow strict, predictable rules.
-
-- **Framework-owned HTTP semantics**
-  Business logic is isolated from transport and protocol concerns.
-
-This project is both an educational deep dive and a serious foundation for a minimal framework.
+MicroAPI is not designed for feature parity.  
+It is designed for **correctness, clarity, and architectural rigor**.
 
 ---
 
-## Key Features
+## Motivation
 
-- **ASGI-compliant core**
-  Built directly on the ASGI specification, with a clean application boundary.
+Modern Python web frameworks provide an excellent developer experience, but their internal complexity is often opaque.
 
-- **Trie-based HTTP router**
-  Custom router implementation using a Trie data structure, enabling:
-  - Linear-time route matching (O(path length))
-  - Static and parameterized paths (`/users/{id}`)
-  - Deterministic precedence rules (static > dynamic)
+MicroAPI exists to answer a single question:
 
-- **Request & Response Abstractions**
-  - Clean request object decoupled from ASGI internals
-  - Framework-owned response types (`TextResponse`, `JSONResponse`)
-  - Explicit body handling and header management
+> **What is the minimal, correct set of abstractions required to build a modern Python web framework?**
 
-- **HTTP Error Control Flow**
-  - Dedicated `HTTPException` model
-  - Clear separation between business errors and HTTP responses
-  - Centralized error handling in the framework layer
-
-- **Endpoint Introspection**
-  - Built-in endpoint discovery at `GET /__endpoints__`
-  - Reflects real runtime routing state
-  - No schemas, decorators, or reflection hacks
-
-- **Extensible Architecture**
-  Designed from the ground up to support:
-  - Middleware
-  - Dependency Injection
-  - CORS handling
-  - Application lifespan events (startup / shutdown)
+To explore this, MicroAPI:
+- avoids implicit behavior
+- makes lifecycles explicit
+- enforces deterministic routing semantics
+- treats dependency resolution as a first-class concern
+- favors architectural correctness over convenience
 
 ---
 
-## Project Structure
+## Design Principles
 
-
+- **Deterministic behavior over magic**
+- **Explicit lifecycles**
+- **Minimal surface area**
+- **Composable abstractions**
+- **No global hidden state**
+- **Testability as a core requirement**
 
 ---
 
-## Example Usage
+## Core Features
 
-```python
-from microapi.router.trie import TrieRouter
-from microapi.app import MicroAPI
+### Routing
+- Trie-based router with linear-time path matching
+- Deterministic route precedence
+- Static segments always take precedence over dynamic segments
+- Explicit distinction between `404 Not Found` and `405 Method Not Allowed`
+- HTTP method–aware routing
+- Route decorators (`@get`, `@post`, etc.)
 
-router = TrieRouter()
+### Middleware
+- Fully composable middleware pipeline
+- Middleware can wrap, short-circuit, or observe request handling
+- Predictable execution order
+- Logging middleware
+- CORS middleware with credentials support
 
-async def hello(request):
-    return {"message": "Hello, world!"}
+### Dependency Injection
+- Signature-based dependency resolution
+- Request injection
+- Dependency chaining
+- Per-request dependency caching
+- Async and async-generator dependencies
+- Deterministic setup and teardown semantics
+- Dependency overrides for testing
 
-async def get_user(request):
-    return {"user_id": request.path_params["id"]}
+### Background Tasks
+- Request-scoped background task system
+- Tasks execute after the response is sent
+- Supports synchronous and asynchronous callables
+- Failures do not affect the response lifecycle
 
-router.add("GET", "/", hello)
-router.add("GET", "/users/{id}", get_user)
+### Application Lifecycle
+- ASGI lifespan support
+- Startup and shutdown hooks
+- Registry-aware lifecycle management
 
-app = MicroAPI(router)
-```
+### Registry
+- Centralized service registry
+- App-scoped and request-scoped dependencies
+- Integrated with dependency injection and lifespan events
 
-Run with
+### Introspection
+- Built-in endpoint introspection page
+- Lists registered routes and supported HTTP methods
 
-```
-make run
-```
+---
 
 ## Routing Semantics
 
@@ -108,52 +96,120 @@ MicroAPI routing is deterministic and intentionally minimal:
 
 ### Example precedence
 
-`/users/me`: static route
-`users/{id}`: dynamic route
-`/users/me` will always match before `/users/{id}`.
+/users/me      → static route
+/users/{id}    → dynamic route
 
----
+### Example usage
 
-## What MicroAPI Is Not (Yet)
+```python3
+from microapi.app import MicroAPI
+from microapi.background import BackgroundTasks
 
-MicroAPI intentionally does **not** include the following (by design):
+app = MicroAPI()
 
-- Decorators like `@get`, `@post`
-- Dependency Injection
+@app.get("/users/{id}")
+async def get_user(request, background_tasks: BackgroundTasks):
+    background_tasks.add(log_access, request.path)
+    return {"user_id": request.path_params["id"]}
+```
+
+### Middleware Examples
+
+```pythons
+async def middleware(request, call_next):
+    print("before")
+    response = await call_next(request)
+    print("after")
+    return response
+
+app.add_middleware(middleware)
+```
+
+### Dependency Injection Example
+
+```python3
+from microapi.dependencies import Depends
+
+async def get_db():
+    return "db-connection"
+
+async def handler(db=Depends(get_db)):
+    return db
+```
+
+### Background Tasks Example
+
+```python3
+
+```
+
+### Project Structure
+
+microapi/
+├── app.py
+├── background.py
+├── di.py
+├── registry.py
+├── dependencies.py
+├── core/
+│   ├── request.py
+│   ├── response.py
+│   ├── router.py
+│   ├── middleware.py
+│   └── exceptions.py
+├── request/
+│   └── asgi.py
+├── response/
+│   ├── text.py
+│   └── json.py
+├── router/
+│   ├── trie.py
+│   ├── simple.py
+│   └── utils.py
+├── middleware/
+│   ├── cors.py
+│   └── logging.py
+├── introspection.py
+tests/
+└── ...
+
+├── introspection.py
+tests/
+└── ...
+
+
+### What MicroAPI Is Not (By Design)
+
+MicroAPI intentionally does not include the following:
+
 - Automatic request validation
 - OpenAPI / schema generation
-- Regex or wildcard (`/*`) routes
+- Regex or wildcard routes
+- Static file serving
+- WebSockets
 
-These features are planned **after core semantics are fully stabilized**.
+These features are deferred until core semantics are fully stabilized.
 
----
+### Planned next steps:
 
-## Roadmap
-
-Planned next steps:
-
-- HTTP method semantics (405 vs 404)
-- Middleware system (enables CORS, logging, authentication)
-- Application lifespan events
-- Route decorators (`@get`, `@post`, etc.)
-- Dependency Injection
+- Route groups and prefixes
 - Typed path and query parameters
 - Static file support
+- Background task scheduling
+- Validation layer
+- OpenAPI generation (later)
 
-Each feature will be added **without compromising existing abstractions**.
+Each feature will be added incrementally without compromising existing abstractions.
 
----
+### Development
 
-## Why This Project Exists
+#### Make tests
+```make
+make test
+```
 
-MicroAPI exists to answer a simple question:
+#### Lint
+```
+ruff check .
+```
 
-> What does it actually take to build a modern Python web framework correctly?
-
-This project explores that question by re-implementing core ideas from FastAPI and Starlette—**without shortcuts**, and with a strong focus on **architecture, correctness, and long-term maintainability**.
-
----
-
-## License
-
-MIT License
