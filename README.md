@@ -166,12 +166,12 @@ Each feature will be added incrementally without compromising existing abstracti
 ### Development
 
 #### Make tests
-```make
+```bash
 make test
 ```
 
 #### Lint
-```
+```bash
 ruff check .
 ```
 
