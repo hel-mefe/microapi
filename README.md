@@ -118,7 +118,7 @@ async def get_user(request, background_tasks: BackgroundTasks):
 
 ### Middleware Examples
 
-```pythons
+```python3
 async def middleware(request, call_next):
     print("before")
     response = await call_next(request)
@@ -139,13 +139,6 @@ async def get_db():
 async def handler(db=Depends(get_db)):
     return db
 ```
-
-### Background Tasks Example
-
-```python3
-
-```
-
 
 ### What MicroAPI Is Not (By Design)
 
